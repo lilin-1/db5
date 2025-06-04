@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>关于我们 - 网络攻防对抗技术研究所</title>
+    <!-- Bootstrap核心CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- LayUI CSS -->
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <!-- 自定义样式 -->
+    <style>
+        .tab-content {
+            padding: 30px;
+            background: #fff;
+            border-left: 1px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+            min-height: 500px;
+        }
+        .teacher-card {
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        .teacher-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .student-photo {
+            width: 120px;
+            height: 160px;
+            object-fit: cover;
+            border: 2px solid #f8f9fa;
+        }
+        .nav-link.active {
+            font-weight: bold;
+            border-bottom: 3px solid #1a237e;
+        }
+    </style>
+</head>
+<body>
+<!-- 面包屑导航 -->
+<nav aria-label="breadcrumb" class="px-4 py-3 bg-light">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首页</a></li>
+        <li class="breadcrumb-item active">关于我们</li>
+    </ol>
+</nav>
+
+<!-- 主内容区 -->
+<div class="container mt-4">
+    <!-- 标签式导航 -->
+    <ul class="nav nav-tabs" id="aboutTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#intro">研究所简介</button>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">师资队伍</a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" data-bs-toggle="tab" data-bs-target="#fulltime">全职教师</a></li>
+                <li><a class="dropdown-item" data-bs-toggle="tab" data-bs-target="#parttime">兼职教师</a></li>
+            </ul>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">学生信息</a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" data-bs-toggle="tab" data-bs-target="#current">在读学生</a></li>
+                <li><a class="dropdown-item" data-bs-toggle="tab" data-bs-target="#graduated">毕业学生</a></li>
+            </ul>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#contact">联系我们</button>
+        </li>
+    </ul>
+
+    <!-- 内容面板 -->
+    <div class="tab-content" id="aboutContent">
+        <!-- 研究所简介 -->
+        <div class="tab-pane fade show active" id="intro" role="tabpanel">
+            <div th:if="${hasEditPermission}" class="text-end mb-3">
+                <button class="btn btn-sm btn-primary" onclick="editIntro()">编辑内容</button>
+            </div>
+            <div id="instituteIntro" th:utext="${institute.introContent}">
+                <!-- 后台动态加载的HTML内容 -->
+            </div>
+        </div>
+
+        <!-- 全职教师标签页 -->
+        <div class="tab-pane fade" id="fulltime" role="tabpanel">
+            <!-- 搜索筛选栏 -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <select class="form-select" id="titleFilter">
+                        <option value="">全部职称</option>
+                        <option value="2">讲师</option>
+                        <option value="3">副教授</option>
+                        <option value="4">教授</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" id="advisorFilter">
+                        <option value="">全部导师资格</option>
+                        <option value="2">硕士生导师</option>
+                        <option value="3">博士生导师</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 卡片式布局 -->
+            <div class="row" id="fulltimeTeachers">
+                <!-- 动态生成的教师卡片 -->
+                <div class="col-lg-4 col-md-6 mb-4" th:each="teacher : ${fulltimeTeachers}">
+                    <div class="card teacher-card h-100">
+                        <!-- 教师照片 -->
+                        <div class="position-relative">
+                            <img th:src="@{${teacher.photo_url ?: '/static/images/default-avatar.png'}}"
+                                 class="card-img-top" alt="教师照片" style="height: 200px; object-fit: cover;">
+                            <span class="position-absolute top-0 end-0 bg-primary text-white px-2 py-1"
+                                  th:text="${@enumService.getTeacherTitle(teacher.title)}">
+                        职称
+                    </span>
+                        </div>
+
+                        <!-- 卡片主体 -->
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${teacher.chinese_name}">姓名</h5>
+
+                            <!-- 关键信息 -->
+                            <div class="teacher-meta mb-3">
+                        <span class="badge bg-info me-1"
+                              th:text="${@enumService.getAdvisorLevel(teacher.is_advisor)}">
+                            导师资格
+                        </span>
+                                <span class="badge bg-secondary" th:text="${teacher.department}">
+                            所属学院
+                        </span>
+                            </div>
+
+                            <!-- 详细信息 -->
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>研究所职务:</span>
+                                    <span th:text="${teacher.research_position} ?: '暂无'"></span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>行政职务:</span>
+                                    <span th:text="${teacher.college_position} ?: '暂无'"></span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- 卡片底部 -->
+                        <div class="card-footer bg-transparent">
+                            <button class="btn btn-sm btn-outline-primary"
+                                    onclick="showTeacherDetail([[${teacher.teacher_id}]])">
+                                查看详情
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 兼职教师 -->
+        <div class="tab-pane fade" id="parttime" role="tabpanel">
+            <div class="row" id="parttimeTeachers">
+                <!-- 动态加载的兼职教师卡片 -->
+                <div class="col-md-4" th:each="teacher : ${parttimeTeachers}">
+                    <div class="card teacher-card">
+                        <div class="card-body">
+                            <h5 th:text="${teacher.chinese_name}">姓名</h5>
+                            <p class="text-muted" th:text="${teacher.title} + ' | ' + ${teacher.department}">
+                                职称 | 工作单位
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 在读学生 -->
+        <div class="tab-pane fade" id="current" role="tabpanel">
+            <div class="mb-3">
+                <select class="form-select" id="yearFilter" style="width: 150px;">
+                    <option value="all">全部年份</option>
+                    <option th:each="year : ${years}" th:value="${year}" th:text="${year}"></option>
+                </select>
+            </div>
+            <div class="row" id="currentStudents">
+                <!-- 学生照片墙 -->
+                <div class="col-6 col-md-3 text-center mb-4" th:each="student : ${currentStudents}">
+                    <a href="javascript:void(0)" onclick="showStudentDetail([[${student.student_id}]])">
+                        <img th:src="@{${student.photo_url ?: '/images/default-avatar.png'}}"
+                             class="student-photo rounded-circle mb-2">
+                        <p class="mb-0" th:text="${student.chinese_name}">姓名</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 毕业学生 -->
+        <div class="tab-pane fade" id="graduated" role="tabpanel">
+            <table id="graduatedTable" class="layui-table" lay-filter="graduatedFilter"></table>
+        </div>
+
+        <!-- 联系我们 -->
+        <div class="tab-pane fade" id="contact" role="tabpanel">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4><i class="fas fa-map-marker-alt"></i> 地址</h4>
+                    <p th:text="${institute.address}">北京市海淀区中关村南大街5号</p>
+
+                    <h4 class="mt-4"><i class="fas fa-phone"></i> 电话</h4>
+                    <p th:text="${institute.phone}">(010) 6891 2345</p>
+                </div>
+                <div class="col-md-6">
+                    <div id="map-container" style="height: 300px;">
+                        <!-- 地图JS API将在此渲染 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 学生详情弹窗 -->
+<div th:fragment="studentDetail" id="studentDetailModal" class="modal fade">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">学生详细信息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="studentDetailContent">
+                <!-- 动态加载的内容 -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript库 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<script>
+    // 初始化LayUI表格
+    layui.use(['table'], function(){
+        var table = layui.table;
+
+        // 全职教师表格
+        table.render({
+            elem: '#fulltimeTable',
+            url: '/api/teachers/fulltime',
+            cols: [[
+                {field: 'chinese_name', title: '姓名', width: 100},
+                {field: 'title', title: '职称', templet: function(d){
+                    const titles = ['', '无', '讲师', '副教授', '教授'];
+                    return titles[d.title] || '未知';
+                }},
+                {field: 'is_advisor', title: '导师资格', templet: function(d){
+                    return ['', '无', '硕导', '博导'][d.is_advisor] || '未知';
+                }},
+                {field: 'research_position', title: '研究所职务'},
+                {field: 'social_position', title: '社会兼职'},
+                {field: 'college_position', title: '学院行政职务'}
+            ]],
+            page: true
+        });
+
+        // 毕业学生表格
+        table.render({
+            elem: '#graduatedTable',
+            url: '/api/students/graduated',
+            cols: [[
+                {field: 'student_id', title: '学号', width: 120},
+                {field: 'chinese_name', title: '姓名', width: 100},
+                {field: 'gender', title: '性别', templet: function(d){
+                    return {'M':'男','F':'女','U':'未知'}[d.gender] || '未知';
+                }},
+                {field: 'student_category', title: '类别', templet: function(d){
+                    const categories = ['', '本科', '学术硕士', '专业硕士', '工学博士', '工程博士'];
+                    return categories[d.student_category] || '未知';
+                }},
+                {field: 'enrollment_date', title: '入学时间', templet: function(d){
+                    return new Date(d.enrollment_date).toLocaleDateString();
+                }},
+                {field: 'graduation_date', title: '毕业时间'},
+                {field: 'first_employment', title: '初次就业单位'}
+            ]],
+            page: true,
+            initSort: {
+                field: 'graduation_date',
+                type: 'desc'
+            }
+        });
+    });
+
+    // 显示学生详情
+    function showStudentDetail(studentId) {
+        axios.get('/api/students/' + studentId)
+            .then(response => {
+                const student = response.data;
+                const content = `
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <img src="${student.photo_url || '/images/default-avatar.png'}"
+                                 class="img-thumbnail mb-3" style="width: 200px;">
+                        </div>
+                        <div class="col-md-8">
+                            <table class="table table-bordered">
+                                <tr><th width="30%">学号</th><td>${student.student_id}</td></tr>
+                                <tr><th>姓名</th><td>${student.chinese_name}</td></tr>
+                                <tr><th>性别</th><td>${student.gender === 'M' ? '男' : '女'}</td></tr>
+                                <tr><th>类别</th><td>${getStudentCategory(student.student_category)}</td></tr>
+                                <tr><th>国籍</th><td>${student.nationality || '中国'}</td></tr>
+                                <tr><th>导师</th><td>${student.advisor || '未指定'}</td></tr>
+                                <tr><th>入学时间</th><td>${new Date(student.enrollment_date).toLocaleDateString()}</td></tr>
+                            </table>
+                        </div>
+                    </div>`;
+                document.getElementById('studentDetailContent').innerHTML = content;
+                new bootstrap.Modal(document.getElementById('studentDetailModal')).show();
+            });
+    }
+
+    // 编辑研究所简介
+    function editIntro() {
+        layer.open({
+            type: 2,
+            title: '编辑研究所简介',
+            content: '/admin/edit_intro',
+            area: ['800px', '600px'],
+            end: function(){
+                location.reload();
+            }
+        });
+    }
+
+    // 学生类别映射
+    function getStudentCategory(category) {
+        const categories = ['', '本科', '学术硕士', '专业硕士', '工学博士', '工程博士'];
+        return categories[category] || '未知';
+    }
+</script>
+</body>
+</html>

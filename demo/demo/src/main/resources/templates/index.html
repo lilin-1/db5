@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网络攻防对抗技术研究所 - BIT</title>
+
+    <!-- Bootstrap 5 核心样式 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- LayUI 核心样式 -->
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+
+    <!-- Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 定制化样式 -->
+    <style>
+        :root {
+            --cyber-blue: #1a237e;
+            --accent-gold: #ffd700;
+        }
+
+        .cyber-navbar {
+            background: linear-gradient(135deg, var(--cyber-blue), #283593);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .hero-section {
+            background: url('../static/images/cyber-bg.png') no-repeat center;
+            background-size: cover;
+            height: 70vh;
+            position: relative;
+        }
+
+        .hero-overlay {
+            background: rgba(0,0,0,0.7);
+        }
+
+        .news-card {
+            transition: transform 0.3s;
+            border-left: 4px solid var(--accent-gold);
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .media-wall img {
+            transition: all 0.3s;
+            filter: grayscale(20%);
+        }
+
+        .media-wall img:hover {
+            filter: grayscale(0%);
+            transform: scale(1.03);
+        }
+
+        /* 新增面包屑导航样式 */
+        .breadcrumb-nav {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+        }
+        .breadcrumb-item + .breadcrumb-item::before {
+            color: rgba(255, 255, 255, 0.6);
+        }
+    </style>
+</head>
+<body>
+<!-- 现代化导航栏 -->
+<nav class="navbar navbar-expand-lg cyber-navbar navbar-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="#">
+            <img src="../static/images/logo_white.png" height="40" class="me-2">
+            <span class="fw-bold">网络攻防对抗技术研究所</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link active" href="#"><i class="fas fa-home me-1"></i> 首页</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="aboutDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-info-circle me-1"></i> 关于我们
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">研究所简介</a></li>
+                        <li><a class="dropdown-item" href="#">组织架构</a></li>
+                        <li><a class="dropdown-item" href="#">研究团队</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="newsDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-newspaper me-1"></i> 动态消息
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-dark">
+                        <li><a class="dropdown-item" href="#">新闻动态</a></li>
+                        <li><a class="dropdown-item" href="#">通知公告</a></li>
+                        <li><a class="dropdown-item" href="#">学术活动</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-book me-1"></i> 教学科研</a></li>
+                <li class="nav-item"><a class="nav-link" href="#"><i class="fas fa-flask me-1"></i> 研究成果</a></li>
+
+                <!-- 新增登录按钮 -->
+                <li class="nav-item ms-lg-3">
+                    <a class="btn btn-outline-light" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        <i class="fas fa-sign-in-alt me-1"></i> 登录
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- 新增面包屑导航 -->
+<div class="container mt-2">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb breadcrumb-nav bg-transparent p-2 text-white">
+            <li class="breadcrumb-item"><a href="#" class="text-white">首页</a></li>
+            <li class="breadcrumb-item active text-white-50" aria-current="page">当前页面</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- 登录模态框 -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="loginModalLabel"><i class="fas fa-sign-in-alt me-2"></i>用户登录</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="username" class="form-label">用户名</label>
+                        <input type="text" class="form-control" id="username" placeholder="请输入用户名">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" placeholder="请输入密码">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">记住我</label>
+                        <a href="#" class="float-end text-decoration-none">忘记密码?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">登录</button>
+                </form>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <p class="mb-0">没有账号？请联系管理员获取访问权限</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 英雄区域 -->
+<section class="hero-section d-flex align-items-center">
+    <div class="hero-overlay w-100 h-100 position-absolute"></div>
+    <div class="container position-relative text-white z-index-1">
+        <div class="row">
+            <div class="col-lg-7">
+                <h1 class="display-3 fw-bold mb-4">探索网络空间安全前沿技术</h1>
+                <p class="lead mb-4">致力于培养顶尖网络安全人才，服务国家战略需求</p>
+                <div class="d-flex gap-3">
+                    <button class="btn btn-warning btn-lg px-4">招生信息</button>
+                    <button class="btn btn-outline-light btn-lg px-4">科研成果</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 动态新闻区 -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h2 class="fw-bold"><i class="fas fa-bolt text-warning me-2"></i>最新动态</h2>
+            <a href="#" class="btn btn-sm btn-outline-primary">更多动态 <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
+
+        <div class="row g-4" id="newsContainer">
+            <!-- 动态内容将通过AJAX加载 -->
+            <div class="col-md-4">
+                <div class="card news-card h-100">
+                    <div class="card-body">
+                        <span class="badge bg-danger mb-2">重要通知</span>
+                        <h5 class="card-title">2025年网络安全夏令营报名开启</h5>
+                        <p class="card-text text-muted">本次夏令营将面向全国高校本科生开放...</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">2023-06-15</small>
+                            <a href="#" class="btn btn-sm btn-outline-primary">查看详情</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 照片墙 -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 fw-bold">科研活动剪影</h2>
+        <div class="row g-3 media-wall">
+            <!-- 图片将通过AJAX加载 -->
+            <div class="col-6 col-md-3">
+                <img src="../static/images/gallery1.png" class="img-fluid rounded" alt="学术研讨">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <img src="../static/images/logo_white.png" height="40" class="mb-3">
+                <p>网络攻防对抗技术研究所,致力于成为国际一流的网络安全研究机构。</p>
+                <div class="social-icons mt-4">
+                    <a href="#" class="text-white me-3"><i class="fab fa-weixin fa-lg"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-weibo fa-lg"></i></a>
+                    <a href="#" class="text-white me-3"><i class="fab fa-linkedin fa-lg"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 mb-4">
+                <h5>快速链接</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><a href="http://cs.bit.edu.cn" class="text-white-50">计算机学院</a></li>
+                    <li class="mb-2"><a href="http://grd.bit.edu.cn" class="text-white-50">研究生院</a></li>
+                    <li class="mb-2"><a href="http://gms.bit.edu.cn" class="text-white-50">研究生管理系统</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-4 mb-4">
+                <h5>联系我们</h5>
+                <ul class="list-unstyled text-white-50">
+                    <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> 北京市海淀区中关村南大街5号</li>
+                    <li class="mb-2"><i class="fas fa-phone me-2"></i> (010) 6891 2345</li>
+                    <li class="mb-2"><i class="fas fa-envelope me-2"></i> cyber@bit.edu.cn</li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-4 mb-4">
+                <h5>微信公众号</h5>
+                <img src="../static/images/logo_white.png" class="img-fluid" width="120" alt="微信公众号">
+            </div>
+        </div>
+        <hr class="my-4 bg-secondary">
+        <div class="row">
+            <div class="col-md-6 text-center text-md-start">
+                <p class="small mb-0">© 2023 北京理工大学网络攻防对抗技术研究所 版权所有</p>
+            </div>
+            <div class="col-md-6 text-center text-md-end">
+                <p class="small mb-0">京ICP备12345678号</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JavaScript 库 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+
+<!-- 整合脚本 -->
+<script>
+    // 初始化LayUI模块
+    layui.use(['layer', 'util'], function(){
+        var layer = layui.layer;
+        var util = layui.util;
+
+        // 固定导航栏
+        util.fixbar({
+            bar1: true,
+            click: function(type){
+                if(type === 'bar1'){
+                    $('html,body').animate({scrollTop:0}, 500);
+                }
+            }
+        });
+    });
+
+    // 动态加载新闻数据
+    $(document).ready(function(){
+        // 模拟AJAX请求
+        $.get('/api/news/latest', function(data){
+            var html = '';
+            data.forEach(function(item){
+                html += `
+                <div class="col-md-4">
+                    <div class="card news-card h-100">
+                        <div class="card-body">
+                            <span class="badge ${item.type === '通知' ? 'bg-danger' : 'bg-primary'} mb-2">${item.type}</span>
+                            <h5 class="card-title">${item.title}</h5>
+                            <p class="card-text text-muted">${item.summary}...</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">${item.date}</small>
+                                <a href="/news/detail/${item.id}" class="btn btn-sm btn-outline-primary">查看详情</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            $('#newsContainer').html(html);
+        });
+
+        // 更新面包屑导航
+        function updateBreadcrumb() {
+            // 这里可以根据实际页面URL动态更新面包屑导航
+            // 示例代码，实际应用中需要根据路由动态生成
+            const path = window.location.pathname;
+            let breadcrumbHtml = '';
+
+            if (path === '/') {
+                breadcrumbHtml = `
+                    <li class="breadcrumb-item"><a href="#" class="text-white">首页</a></li>
+                    <li class="breadcrumb-item active text-white-50" aria-current="page">当前页面</li>
+                `;
+            } else {
+                // 其他页面的面包屑导航
+                breadcrumbHtml = `
+                    <li class="breadcrumb-item"><a href="/" class="text-white">首页</a></li>
+                    <li class="breadcrumb-item active text-white-50" aria-current="page">${path.split('/')[1]}</li>
+                `;
+            }
+
+            $('.breadcrumb').html(breadcrumbHtml);
+        }
+
+        updateBreadcrumb();
+    });
+</script>
+</body>
+</html>

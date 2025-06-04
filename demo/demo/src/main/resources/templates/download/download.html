@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>下载专区 - 网络攻防对抗技术研究所</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <style>
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #5c6bc0;
+        }
+        .download-category {
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s;
+        }
+        .download-category:hover {
+            background-color: rgba(26, 35, 126, 0.05);
+            transform: translateX(5px);
+        }
+        .download-category.active {
+            background-color: rgba(26, 35, 126, 0.1);
+        }
+        .file-card {
+            border-radius: 8px;
+            transition: all 0.3s;
+            height: 100%;
+        }
+        .file-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+        .file-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+        }
+        .file-type-badge {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 0.7rem;
+        }
+        .download-badge {
+            background-color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+<!-- 顶部导航 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-download me-2"></i>下载专区
+        </a>
+        <div class="d-flex align-items-center text-white">
+            <span th:text="${session.user.chinese_name}"></span>
+            <img th:src="@{${session.user.photo_url ?: '/images/default-avatar.png'}}"
+                 class="rounded-circle ms-3" width="40" height="40">
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- 分类导航 -->
+        <div class="col-md-3">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-folder-open me-2"></i>资料分类
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#" class="list-group-item list-group-item-action download-category active"
+                       data-category="all">
+                        <i class="fas fa-star me-2"></i>全部资料
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action download-category"
+                       data-category="proposal">
+                        <i class="fas fa-file-signature me-2"></i>开题资料
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action download-category"
+                       data-category="midterm">
+                        <i class="fas fa-calendar-check me-2"></i>中期资料
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action download-category"
+                       data-category="defense">
+                        <i class="fas fa-graduation-cap me-2"></i>答辩资料
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action download-category"
+                       data-category="thesis">
+                        <i class="fas fa-scroll me-2"></i>学位论文
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action download-category"
+                       data-category="patent">
+                        <i class="fas fa-certificate me-2"></i>专利资料
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action download-category"
+                       data-category="meeting">
+                        <i class="fas fa-users me-2"></i>会议资料
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action download-category"
+                       data-category="document">
+                        <i class="fas fa-file-alt me-2"></i>上级文件
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action download-category"
+                       data-category="other">
+                        <i class="fas fa-archive me-2"></i>其他资料
+                    </a>
+                </div>
+            </div>
+
+            <!-- 热门下载 -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <i class="fas fa-fire me-2"></i>热门下载
+                </div>
+                <div class="list-group list-group-flush">
+                    <a th:each="file : ${hotFiles}" th:href="@{/download?id={id}(id=${file.file_id})}"
+                       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span th:text="${file.file_name}"></span>
+                        <span class="badge download-badge rounded-pill" th:text="${file.download_count}"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 文件列表 -->
+        <div class="col-md-9">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>文件列表</h5>
+                    <div>
+                        <input type="text" id="fileSearch" class="form-control" placeholder="搜索文件名..." style="width: 250px;">
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- 文件分类展示 -->
+                    <div class="row" id="fileContainer">
+                        <!-- 开题资料 -->
+                        <div class="col-lg-4 col-md-6 mb-4 file-item" data-category="proposal"
+                             th:each="file : ${files}" th:if="${file.category == 'proposal'}">
+                            <div class="card file-card h-100">
+                                <div class="card-body text-center position-relative">
+                                    <span class="badge bg-secondary file-type-badge" th:text="${file.file_type}"></span>
+                                    <i class="fas fa-file-word file-icon" th:if="${file.file_type == 'doc' || file.file_type == 'docx'}"></i>
+                                    <i class="fas fa-file-pdf file-icon" th:if="${file.file_type == 'pdf'}"></i>
+                                    <i class="fas fa-file-powerpoint file-icon" th:if="${file.file_type == 'ppt' || file.type == 'pptx'}"></i>
+                                    <i class="fas fa-file-excel file-icon" th:if="${file.file_type == 'xls' || file.type == 'xlsx'}"></i>
+                                    <i class="fas fa-file-alt file-icon" th:if="${file.file_type == 'txt' || file.type == 'md'}"></i>
+                                    <i class="fas fa-file-archive file-icon" th:if="${file.file_type == 'zip' || file.type == 'rar'}"></i>
+                                    <h6 class="card-title mt-3" th:text="${file.file_name}"></h6>
+                                    <p class="card-text text-muted small">
+                                        <span th:text="${#dates.format(file.upload_time, 'yyyy-MM-dd')}"></span>
+                                        <span> | </span>
+                                        <span th:text="${#numbers.formatDecimal(file.file_size/1024/1024, 1, 2) + 'MB'}"></span>
+                                    </p>
+                                </div>
+                                <div class="card-footer bg-transparent text-center">
+                                    <a th:href="@{/download?id={id}(id=${file.file_id})}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-download me-1"></i> 下载
+                                    </a>
+                                    <span class="badge bg-light text-dark ms-2" th:text="${file.download_count + '次下载'}"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 其他分类文件（结构相同，仅修改data-category属性） -->
+                        <div class="col-lg-4 col-md-6 mb-4 file-item" data-category="midterm"
+                             th:each="file : ${files}" th:if="${file.category == 'midterm'}">
+                            <!-- 内容同上 -->
+                        </div>
+
+                        <!-- 更多分类... -->
+                    </div>
+
+                    <!-- 分页控件 -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item disabled">
+                                        <a class="page-link" href="#" tabindex="-1">上一页</a>
+                                    </li>
+                                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="#">下一页</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 上传记录（管理员可见） -->
+            <div class="card shadow-sm" th:if="${session.user.user_role == 0 || session.user.user_role == 3}">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-cloud-upload-alt me-2"></i>上传记录</h5>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                        <i class="fas fa-plus me-1"></i> 上传文件
+                    </button>
+                </div>
+                <div class="card-body">
+                    <table id="uploadTable" class="layui-table" lay-filter="uploadTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 文件上传模态框 -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">上传新文件</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">选择文件</label>
+                        <input type="file" class="form-control" name="file" required>
+                        <div class="form-text">支持格式：PDF/DOC/PPT/XLS/ZIP，最大50MB</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">文件名称</label>
+                            <input type="text" class="form-control" name="file_name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">文件分类</label>
+                            <select class="form-select" name="category" required>
+                                <option value="proposal">开题资料</option>
+                                <option value="midterm">中期资料</option>
+                                <option value="defense">答辩资料</option>
+                                <option value="thesis">学位论文</option>
+                                <option value="patent">专利资料</option>
+                                <option value="meeting">会议资料</option>
+                                <option value="document">上级文件</option>
+                                <option value="other">其他资料</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">文件描述</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" name="is_hot">
+                        <label class="form-check-label">设为热门下载</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="submitUpload()">确认上传</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript 库 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
+<script>
+    // 分类筛选功能
+    $(document).ready(function(){
+        // 分类导航点击事件
+        $('.download-category').click(function(e){
+            e.preventDefault();
+            const category = $(this).data('category');
+
+            // 更新导航状态
+            $('.download-category').removeClass('active');
+            $(this).addClass('active');
+
+            // 筛选文件
+            if(category === 'all') {
+                $('.file-item').show();
+            } else {
+                $('.file-item').hide();
+                $(`.file-item[data-category="${category}"]`).show();
+            }
+        });
+
+        // 文件搜索功能
+        $('#fileSearch').keyup(function(){
+            const keyword = $(this).val().toLowerCase();
+            const activeCategory = $('.download-category.active').data('category');
+
+            $('.file-item').each(function(){
+                const fileName = $(this).find('.card-title').text().toLowerCase();
+                const fileCategory = $(this).data('category');
+
+                const matchSearch = fileName.includes(keyword);
+                const matchCategory = activeCategory === 'all' || fileCategory === activeCategory;
+
+                $(this).toggle(matchSearch && matchCategory);
+            });
+        });
+
+        // 初始化上传表格（管理员）
+        layui.use('table', function(){
+            var table = layui.table;
+
+            table.render({
+                elem: '#uploadTable',
+                url: '/api/uploads/list',
+                cols: [[
+                    {field: 'file_name', title: '文件名', width: 200},
+                    {field: 'category', title: '分类', templet: function(d){
+                        const categories = {
+                            'proposal': '开题资料',
+                            'midterm': '中期资料',
+                            'defense': '答辩资料',
+                            'thesis': '学位论文',
+                            'patent': '专利资料',
+                            'meeting': '会议资料',
+                            'document': '上级文件',
+                            'other': '其他资料'
+                        };
+                        return categories[d.category] || d.category;
+                    }},
+                    {field: 'upload_time', title: '上传时间', width: 160},
+                    {field: 'download_count', title: '下载量', width: 100},
+                    {field: 'status', title: '状态', templet: function(d){
+                        return d.status === 1 ?
+                            '<span class="badge bg-success">已发布</span>' :
+                            '<span class="badge bg-warning">待审核</span>';
+                    }},
+                    {field: 'action', title: '操作', toolbar: '#uploadToolbar'}
+                ]],
+                page: true
+            });
+        });
+    });
+
+    // 文件上传提交
+    function submitUpload() {
+        const formData = new FormData(document.getElementById('uploadForm'));
+
+        $.ajax({
+            url: '/api/uploads',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                if(res.code === 200) {
+                    layer.msg('上传成功');
+                    $('#uploadModal').modal('hide');
+                    layui.table.reload('uploadTable');
+                } else {
+                    layer.msg(res.msg || '上传失败');
+                }
+            }
+        });
+    }
+
+    // 文件操作
+    function deleteFile(fileId) {
+        layer.confirm('确定删除这个文件吗？', {
+            title: '删除确认',
+            btn: ['确定', '取消']
+        }, function(){
+            $.ajax({
+                url: '/api/uploads/' + fileId,
+                type: 'DELETE',
+                success: function(res) {
+                    if(res.code === 200) {
+                        layer.msg('删除成功');
+                        layui.table.reload('uploadTable');
+                    } else {
+                        layer.msg(res.msg || '删除失败');
+                    }
+                }
+            });
+        });
+    }
+</script>
+
+<!-- 表格工具栏模板 -->
+<script type="text/html" id="uploadToolbar">
+    <button class="btn btn-sm btn-success" lay-event="edit">
+        <i class="fas fa-edit"></i> 编辑
+    </button>
+    <button class="btn btn-sm btn-danger" lay-event="delete">
+        <i class="fas fa-trash"></i> 删除
+    </button>
+</script>
+</body>
+</html>

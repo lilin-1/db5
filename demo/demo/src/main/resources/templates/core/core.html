@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>研究所内部管理系统</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- LayUI 表格 -->
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <style>
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #5c6bc0;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, var(--primary-color), #283593);
+            min-height: calc(100vh - 56px);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border-left-color: #ffc107;
+        }
+        .card-header {
+            background: var(--primary-color);
+            color: white;
+        }
+        .attendance-badge {
+            font-size: 0.75rem;
+            padding: 3px 6px;
+        }
+        .book-cover {
+            height: 120px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        #attendanceChart, #borrowChart {
+            height: 300px;
+        }
+    </style>
+</head>
+<body>
+<!-- 顶部导航 -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-flask me-2"></i>研究所内部管理系统
+        </a>
+        <div class="d-flex align-items-center text-white">
+            <span th:text="${session.user.chinese_name}"></span>
+            <img th:src="@{${session.user.photo_url ?: '/images/default-avatar.png'}}"
+                 class="rounded-circle ms-3" width="40" height="40">
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- 侧边栏 -->
+        <div class="col-md-2 p-0 sidebar">
+            <ul class="nav flex-column p-3">
+                <li class="nav-item mb-2">
+                    <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                        <i class="fas fa-tachometer-alt me-2"></i>工作台
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="#attendance" data-bs-toggle="tab">
+                        <i class="fas fa-check-circle me-2"></i>签到统计
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="#library" data-bs-toggle="tab">
+                        <i class="fas fa-book me-2"></i>图书借阅
+                    </a>
+                </li>
+                <li class="nav-item mb-2" th:if="${session.user.user_role == 0}">
+                    <a class="nav-link" href="#admin" data-bs-toggle="tab">
+                        <i class="fas fa-cog me-2"></i>系统管理
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="col-md-10 p-4">
+            <div class="tab-content">
+                <!-- 工作台 -->
+                <div class="tab-pane fade show active" id="dashboard">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>今日签到情况</span>
+                                    <span class="badge bg-info" th:text="${'当前时间: ' + #dates.format(#dates.createNow(), 'HH:mm')}"></span>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="attendanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-header">
+                                    借阅情况统计
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="borrowChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-header">
+                                    <i class="fas fa-bell me-2"></i>待办事项
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-warning" th:if="${overdueBooks}">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        您有 [[${overdueBooks.size()}]] 本图书逾期未还！
+                                    </div>
+                                    <div class="alert alert-info" th:if="${dueSoonBooks}">
+                                        <i class="fas fa-clock me-2"></i>
+                                        您有 [[${dueSoonBooks.size()}]] 本图书即将到期
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card shadow-sm">
+                                <div class="card-header">
+                                    <i class="fas fa-bullhorn me-2"></i>最新通知
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item" th:each="notice : ${notices}">
+                                            <div class="d-flex justify-content-between">
+                                                <span th:text="${notice.title}"></span>
+                                                <small class="text-muted" th:text="${#dates.format(notice.publish_time, 'MM-dd HH:mm')}"></small>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 签到统计 -->
+                <div class="tab-pane fade" id="attendance">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>签到记录</span>
+                            <div>
+                                <select id="attendanceFilter" class="form-select form-select-sm" style="width: 150px; display: inline-block;">
+                                    <option value="7">最近7天</option>
+                                    <option value="30">最近30天</option>
+                                    <option value="90">最近90天</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <table id="attendanceTable" class="layui-table" lay-filter="attendanceTable">
+                                <thead>
+                                <tr>
+                                    <th lay-data="{field:'date', width:120}">日期</th>
+                                    <th lay-data="{field:'check_in', width:160}">签到时间</th>
+                                    <th lay-data="{field:'check_out', width:160}">签出时间</th>
+                                    <th lay-data="{field:'duration', width:100}">时长</th>
+                                    <th lay-data="{field:'ip', width:120}">IP地址</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="record : ${attendanceRecords}">
+                                    <td th:text="${#dates.format(record.check_in_time, 'yyyy-MM-dd')}"></td>
+                                    <td th:text="${#dates.format(record.check_in_time, 'HH:mm:ss')}"></td>
+                                    <td th:text="${record.check_out_time != null} ? ${#dates.format(record.check_out_time, 'HH:mm:ss')} : '--'"></td>
+                                    <td>
+                                                <span th:if="${record.check_out_time != null}"
+                                                      th:text="${#dates.format(#dates.create(#dates.interval(record.check_in_time, record.check_out_time).toMillis()), 'HH:mm')}"></span>
+                                        <span th:unless="${record.check_out_time != null}" class="badge bg-warning">进行中</span>
+                                    </td>
+                                    <td th:text="${record.login_ip}"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- 管理员专属视图 -->
+                    <div class="card shadow-sm" th:if="${session.user.user_role == 0 || session.user.user_role == 3}">
+                        <div class="card-header">
+                            <i class="fas fa-users-cog me-2"></i>成员签到统计
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <select id="memberFilter" class="form-select" style="width: 200px;">
+                                    <option value="all">全部成员</option>
+                                    <option th:each="group : ${groups}"
+                                            th:value="${group.group_id}"
+                                            th:text="${group.group_name}"></option>
+                                </select>
+                            </div>
+                            <table id="memberAttendanceTable" class="layui-table" lay-filter="memberAttendance"></table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图书借阅 -->
+                <div class="tab-pane fade" id="library">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span>图书目录</span>
+                                    <div>
+                                        <input type="text" id="bookSearch" class="form-control form-control-sm"
+                                               placeholder="搜索书名/作者" style="width: 200px; display: inline-block;">
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <table id="bookTable" class="layui-table" lay-filter="bookTable">
+                                        <thead>
+                                        <tr>
+                                            <th lay-data="{field:'cover', width:80}">封面</th>
+                                            <th lay-data="{field:'title', width:200}">书名</th>
+                                            <th lay-data="{field:'author', width:120}">作者</th>
+                                            <th lay-data="{field:'year', width:80}">出版年</th>
+                                            <th lay-data="{field:'status', width:100}">状态</th>
+                                            <th lay-data="{field:'action', width:120}">操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="book : ${books}">
+                                            <td>
+                                                <img th:src="@{${book.cover_url ?: '/images/default-book.png'}}"
+                                                     class="book-cover" style="width: 60px;">
+                                            </td>
+                                            <td th:text="${book.book_name}"></td>
+                                            <td th:text="${book.author}"></td>
+                                            <td th:text="${book.publish_date.substring(0,4)}"></td>
+                                            <td>
+                                                        <span th:if="${book.current_location == 1}"
+                                                              class="badge bg-success">在馆</span>
+                                                <span th:unless="${book.current_location == 1}"
+                                                      class="badge bg-danger">已借出</span>
+                                            </td>
+                                            <td>
+                                                <button th:if="${book.current_location == 1}"
+                                                        class="btn btn-sm btn-primary"
+                                                        onclick="requestBorrow('[[${book.book_id}]]')">
+                                                    <i class="fas fa-bookmark"></i> 借阅
+                                                </button>
+                                                <button th:unless="${book.current_location == 1}"
+                                                        class="btn btn-sm btn-secondary" disabled>
+                                                    不可借
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header">
+                                    <i class="fas fa-book-open me-2"></i>我的借阅
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group">
+                                        <a th:each="record : ${myBorrows}"
+                                           href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex w-100 justify-content-between">
+                                                <h6 class="mb-1" th:text="${record.book.book_name}"></h6>
+                                                <small th:classappend="${record.status == 4} ? 'text-danger' : 'text-muted'"
+                                                       th:text="${record.status == 2} ? '借阅中' :
+                                                                   (record.status == 3 ? '已归还' : '逾期')"></small>
+                                            </div>
+                                            <p class="mb-1">
+                                                <small th:text="${'借阅日期: ' + #dates.format(record.borrow_time, 'yyyy-MM-dd')}"></small>
+                                            </p>
+                                            <div th:if="${record.status == 2 || record.status == 4}">
+                                                <small th:text="${'应还日期: ' + #dates.format(record.due_time, 'yyyy-MM-dd')}"></small>
+                                                <div class="progress mt-2" style="height: 5px;">
+                                                    <div class="progress-bar bg-warning"
+                                                         th:style="${'width: ' + record.remainingPercent + '%'}"></div>
+                                                </div>
+                                            </div>
+                                            <button th:if="${record.status == 2}"
+                                                    class="btn btn-sm btn-outline-primary mt-2"
+                                                    onclick="returnBook('[[${record.record_id}]]')">
+                                                <i class="fas fa-undo"></i> 归还
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 图书管理员专属 -->
+                            <div class="card shadow-sm" th:if="${session.user.user_role == 3}">
+                                <div class="card-header">
+                                    <i class="fas fa-tasks me-2"></i>借阅审批
+                                </div>
+                                <div class="card-body">
+                                    <table id="approveTable" class="layui-table" lay-filter="approveTable"></table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统管理 -->
+                <div class="tab-pane fade" id="admin" th:if="${session.user.user_role == 0}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-header">
+                                    <i class="fas fa-book me-2"></i>图书规则设置
+                                </div>
+                                <div class="card-body">
+                                    <form id="libraryConfigForm">
+                                        <div class="mb-3">
+                                            <label class="form-label">最大借阅量</label>
+                                            <input type="number" class="form-control" name="max_books"
+                                                   th:value="${config.max_books}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">借阅天数</label>
+                                            <input type="number" class="form-control" name="loan_days"
+                                                   th:value="${config.loan_days}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">宽限天数</label>
+                                            <input type="number" class="form-control" name="grace_days"
+                                                   th:value="${config.grace_days}">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">保存设置</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript 库 -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/static/layui/layui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
+<script>
+    // 初始化图表
+    function initCharts() {
+        // 签到统计图
+        const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+        new Chart(attendanceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                datasets: [{
+                    label: '签到人数',
+                    data: [12, 19, 15, 17, 16, 8, 5],
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)'
+                }]
+            }
+        });
+
+        // 借阅统计图
+        const borrowCtx = document.getElementById('borrowChart').getContext('2d');
+        new Chart(borrowCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['在馆', '借出', '逾期'],
+                datasets: [{
+                    data: [85, 23, 4],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(255, 99, 132, 0.6)'
+                    ]
+                }]
+            }
+        });
+    }
+
+    // 初始化表格
+    function initTables() {
+        layui.use('table', function(){
+            var table = layui.table;
+
+            // 签到记录表
+            table.init('attendanceTable', {
+                height: 400,
+                page: true
+            });
+
+            // 图书表
+            table.init('bookTable', {
+                height: 600,
+                page: true
+            });
+
+            // 管理员表格初始化
+            table.init('memberAttendanceTable', {
+                url: '/api/attendance/stats',
+                height: 400,
+                page: true,
+                cols: [[
+                    {field: 'name', title: '姓名', width: 100},
+                    {field: 'group', title: '年级/项目'},
+                    {field: 'check_in_rate', title: '签到率', templet: function(d){
+                        return '<div class="progress"><div class="progress-bar" style="width:'
+                             + d.check_in_rate + '%">' + d.check_in_rate + '%</div></div>';
+                    }},
+                    {field: 'avg_duration', title: '平均时长'}
+                ]]
+            });
+
+            // 审批表格初始化
+            table.init('approveTable', {
+                url: '/api/borrow/requests',
+                height: 400,
+                page: true,
+                cols: [[
+                    {field: 'book_name', title: '图书名称'},
+                    {field: 'requester', title: '申请人'},
+                    {field: 'request_time', title: '申请时间'},
+                    {field: 'action', title: '操作', toolbar: '#approveToolbar'}
+                ]],
+                parseData: function(res) {
+                    return {
+                        "code": 0,
+                        "msg": "",
+                        "count": res.total,
+                        "data": res.data
+                    };
+                }
+            });
+        });
+    }
+
+    // 图书借阅请求
+    function requestBorrow(bookId) {
+        layer.confirm('确认借阅这本图书吗？', {
+            title: '借阅确认',
+            btn: ['确认', '取消']
+        }, function(){
+            $.post('/api/borrow/request', {book_id: bookId}, function(res){
+                if(res.code === 200) {
+                    layer.msg('借阅申请已提交，等待审核');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    layer.msg(res.msg || '操作失败');
+                }
+            });
+        });
+    }
+
+    // 图书归还
+    function returnBook(recordId) {
+        layer.confirm('确认归还这本图书吗？', {
+            title: '归还确认',
+            btn: ['确认', '取消']
+        }, function(){
+            $.post('/api/borrow/return', {record_id: recordId}, function(res){
+                if(res.code === 200) {
+                    layer.msg('图书已归还');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    layer.msg(res.msg || '操作失败');
+                }
+            });
+        });
+    }
+
+    // 页面加载完成后初始化
+    $(document).ready(function(){
+        initCharts();
+        initTables();
+
+        // 监听搜索框
+        $('#bookSearch').keyup(function(){
+            const keyword = $(this).val();
+            layui.table.reload('bookTable', {
+                where: { keyword: keyword }
+            });
+        });
+    });
+</script>
+
+<!-- 表格工具栏模板 -->
+<script type="text/html" id="approveToolbar">
+    <button class="btn btn-sm btn-success" lay-event="approve">批准</button>
+    <button class="btn btn-sm btn-danger" lay-event="reject">拒绝</button>
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新闻详情</title>
+    <!-- 引入Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- 标题区 -->
+            <div class="mb-4">
+                <h2 th:text="${news.title}"></h2>
+                <div class="d-flex justify-content-between text-muted">
+                    <span th:text="${news.author}"></span>
+                    <span th:text="${#dates.format(news.publish_time, 'yyyy-MM-dd HH:mm')}"></span>
+                </div>
+            </div>
+
+            <!-- 多媒体展示区 -->
+            <div class="mb-4" th:if="${not #lists.isEmpty(news.attachments)}">
+                <div th:each="file : ${news.attachments}">
+                    <div th:switch="${file.type}">
+                        <!-- 图片展示 -->
+                        <div th:case="image" class="mb-3">
+                            <img th:src="@{${file.url}}" class="img-fluid rounded">
+                        </div>
+
+                        <!-- 视频播放器 -->
+                        <div th:case="video" class="ratio ratio-16x9 mb-3">
+                            <video controls>
+                                <source th:src="@{${file.url}}" th:attr="type=${file.mimeType}">
+                            </video>
+                        </div>
+
+                        <!-- 文件下载 -->
+                        <div th:case="file" class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <span th:text="${file.name}"></span>
+                                    <a th:href="@{${file.url}}"
+                                       class="btn btn-sm btn-success"
+                                       download>
+                                        下载 ([[${#numbers.formatDecimal(file.size/1024, 1, 2)}]] KB)
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 正文内容 -->
+            <div class="news-content" th:utext="${news.content}"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 引入Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
