@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.kzl.dao.StudentMapper">
+<mapper namespace="com.example.library.mapper.StudentMapper">
 
-    <resultMap id="StudentResultMap" type="com.kzl.entity.Student">
+    <resultMap id="StudentResultMap" type="com.example.library.entity.Student">
         <id property="studentId" column="student_id"/>
         <result property="studentCategory" column="student_category"/>
         <result property="enrollmentDate" column="enrollment_date"/>

@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.demo.dao.TeacherMapper">
+<mapper namespace="com.example.library.mapper.TeacherMapper">
 
-    <resultMap id="TeacherResultMap" type="com.example.demo.entity.Teacher">
+    <resultMap id="TeacherResultMap" type="com.example.library.entity.Teacher">
         <id property="teacherId" column="teacher_id"/>
         <result property="department" column="department"/>
         <result property="teacherCategory" column="teacher_category"/>
