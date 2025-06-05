@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kzl.dao.StudentMapper">
+
+    <resultMap id="StudentResultMap" type="com.kzl.entity.Student">
+        <id property="studentId" column="student_id"/>
+        <result property="studentCategory" column="student_category"/>
+        <result property="enrollmentDate" column="enrollment_date"/>
+        <result property="advisor" column="advisor"/>
+        <result property="coAdvisor" column="co_advisor"/>
+        <result property="remarks" column="remarks"/>
+        <result property="photoUrl" column="photo_url"/>
+        <result property="status" column="status"/>
+        <result property="userId" column="user_id"/>
+        <result property="grade" column="grade"/>
+        <result property="fullTimeInformation" column="full-time_information"/>
+        <result property="chineseName" column="chinese_name"/>
+    </resultMap>
+
+    <select id="getAllStudents" resultMap="StudentResultMap">
+        SELECT s.*, u.chinese_name
+        FROM student s
+        JOIN user u ON s.user_id = u.user_id
+    </select>
+
+    <select id="getStudentById" resultMap="StudentResultMap">
+        SELECT s.*, u.chinese_name
+        FROM student s
+        JOIN user u ON s.user_id = u.user_id
+        WHERE s.student_id = #{studentId}
+    </select>
+</mapper>
