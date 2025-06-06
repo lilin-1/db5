@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.library.mapper.PaperMapper">
+
+    <resultMap id="PaperResultMap" type="com.example.library.entity.Paper">
+        <id property="achievementId" column="achievement_id"/>
+        <result property="paperName" column="paper_name"/>
+        <result property="authorId" column="author_id"/>
+        <result property="publishYear" column="publish_year"/>
+        <result property="publicationName" column="publication_name"/>
+        <result property="publicationInfo" column="publication_info"/>
+        <result property="paperType" column="paper_type"/>
+        <result property="paperTitle" column="paper_title"/>
+        <result property="chineseName" column="chinese_name"/>
+    </resultMap>
+
+    <select id="getAllPaper" resultMap="PaperResultMap">
+        SELECT p.*
+        FROM paper p
+    </select>
+
+    <select id="getPaperByName" resultMap="PaperResultMap">
+        SELECT p.*
+        FROM paper p
+        WHERE p.paper_name = #{paperName}
+    </select>
+</mapper>
