@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.library.mapper.PatentMapper">
+
+    <resultMap id="PatentResultMap" type="com.example.library.entity.Patent">
+        <id property="achievementId" column="achievement_id"/>
+        <result property="patentId" column="patent_id"/>
+        <result property="inventionName" column="invention_name"/>
+        <result property="chineseName" column="chinese_name"/>
+        <result property="inventionType" column="invention_type"/>
+        <result property="applicationDate" column="application_date"/>
+        <result property="authorizationDate" column="authorization_date"/>
+        <result property="author" column="author"/>
+        <result property="state" column="state"/>
+    </resultMap>
+
+    <select id="getAllPatent" resultMap="PatentResultMap">
+        SELECT p.*
+        FROM patent p
+    </select>
+
+    <select id="getPatent" resultMap="PatentResultMap">
+        SELECT p.*
+        FROM patent p
+        WHERE p.patent_id = #{patentId}
+    </select>
+</mapper>

@@ -4,7 +4,7 @@ import lombok.Data;
 import java.util.Date;
 @Data
 public class Patent extends Achievement {
-    //private String achievementId; // 研究成果编号
+    private String achievementId; // 研究成果编号
     private String patentId; // 专利申请号
     private String inventionName; // 发明名称
     private String chineseName; // 当前申请人（专利权人）
