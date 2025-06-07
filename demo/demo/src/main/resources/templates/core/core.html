@@ -50,9 +50,17 @@
 <!-- 顶部导航 -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="../index.html">
             <i class="fas fa-flask me-2"></i>研究所内部管理系统
         </a>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="../index.html">首页</a></li>
+            <li class="breadcrumb-item aboutus"><a href="../aboutus/aboutus.html">关于我们</a></li>
+            <li class="breadcrumb-item news"><a href="../news/news.html">动态消息</a></li>
+            <li class="breadcrumb-item education"><a href="../education/eudcation.html">教学科研</a></li>
+            <li class="breadcrumb-item achievements"><a href="../achievements/achievements.html">研究成果</a></li>
+            <li class="breadcrumb-item core"><b>内部管理</b></li>
+        </ol>
         <div class="d-flex align-items-center text-white">
             <span th:text="${session.user.chinese_name}"></span>
             <img th:src="@{${session.user.photo_url ?: '/images/default-avatar.png'}}"
